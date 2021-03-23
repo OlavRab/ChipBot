@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "chipbot"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Bot that plays sound-chips and does other random things"
+authors = ["Olav van Rabenswaaij <Olav.van.rabenswaaij@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -11,6 +11,7 @@ discord = "^1.0.1"
 replit = "^2.0.0"
 PyNaCl = "^1.4.0"
 mutagen = "^1.45.1"
+pytz = "^2021.1"
 
 [tool.poetry.dev-dependencies]
 
