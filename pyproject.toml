@@ -11,7 +11,6 @@ discord = "^1.0.1"
 replit = "^2.0.0"
 PyNaCl = "^1.4.0"
 mutagen = "^1.45.1"
-pytz = "^2021.1"
 
 [tool.poetry.dev-dependencies]
 

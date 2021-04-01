@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 import os
@@ -10,8 +11,18 @@ import os.path
 from os import path
 import json
 import datetime
+from datetime import datetime
 from pytz import timezone
 from keep_alive import keep_alive
+import re
+import logging
+
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 intens = discord.Intents.default()
 intens.members = True
@@ -26,10 +37,17 @@ scared = False
 # pfp = fp.read()
 
 
+@client.command(pass_context = True, help='Remove a sound')
+async def rmsound(ctx,message):
+  serverid = ctx.message.guild.id
+  sound = message
+  path = "/var/chips/"+str(serverid)+"_"+str(sound)+".mp3"
+  os.remove(path)
+
 @client.event
 async def on_ready():
   # await client.user.edit(avatar=pfp)
-  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!sound & !commands"))
+  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
   print('Bot logged in as user: {0.user}'.format(client))
   print('-----------------------------------')
 
@@ -45,7 +63,7 @@ async def on_voice_state_update(member, before, after):
 
 
 #When a user asks bot to leave
-@client.command(pass_context = True)
+@client.command(pass_context = True, help='Make the bot leave the channel it is in')
 async def leave(ctx):
   if(scared == True):       #if scarymode is on, leaving is not possible
     await ctx.send("Try to leave? You cannot run")
@@ -56,34 +74,64 @@ async def leave(ctx):
     else:
       await ctx.send("I am not in a voice channel")
 
+#YouTube music player - WIP
+@client.command(pass_context=True)
+async def play(ctx, message):
+	link = message
+	await ctx.send(link)
+
+@client.command(pass_context = True)
+async def channel(ctx):
+  user_channel = ctx.author.voice.channel
+  bot_channel = ctx.voice_client.channel
+  if(ctx.voice_client is None):
+    await ctx.send("Not connected")
+  else:
+    if(user_channel == bot_channel):
+      await ctx.send("Same Channel")
+    else:
+      await ctx.send("Not the same channel")
+
 #Soundbot Command
-@client.command(pass_context= True)
+@client.command(pass_context= True, help='Play Audio by using !sound [Soundname]')
 async def sound(ctx, message):
-  mp3 = message+'.mp3' #take message (soundname) and add .mp3
-  mp3 = 'sounds/'+mp3  #Add /sounds folder
+  serverid = ctx.message.guild.id
+  mp3 = "/var/chips/"+str(serverid) + "_" + message + ".mp3"
   print(mp3)
   if(path.exists(mp3)):#check if file exists
-    source = FFmpegPCMAudio(mp3) #set FFMPEG source
-    if(ctx.author.voice is None): #check if author is in voice channel
-      await ctx.send("Please join a voice channel first!")
-      print("Author not in voicechat") 
-    else:               #otherwist, get authors voice channel UID
-      print("Author in voicechat") 
-      channel = ctx.author.voice.channel
-      if(ctx.voice_client is None): #check if bot is already in voicechannel
-        print("Bot is not connected, connecting...")
-        voice = await channel.connect()   #if not -> Connect
-        voice.play(source)                #and Play
-      else:                               #if already connected
-        voice = ctx.voice_client          #get UID of voice channel
-        print("Bot is connected to voicechat")
-        voice.play(source)                #play without Reconnecting
+    source = FFmpegPCMAudio(mp3)
+    if(ctx.author.voice is None):   #is author in a voice channel?
+      await ctx.send("Please join a voice channel first!")   #join channel first
+    else:    #if author is in voice channel
+      channel = ctx.author.voice.channel      #set channel var to author's channel
+      if(ctx.voice_client is None):           #Check if bot is not in voice
+        voice = await channel.connect()       #If not -> Connect to channel with Author ID
+        if(voice.is_playing()):               #If voice is already playing
+          voice.stop()                        #Stop talking and start new sound
+          voice.play(source)                
+        else:                                 #If bot wasn't playing, start new sound
+          voice.play(source)            
+      else:                                   #If the bot is already connected to A channel
+        botchannel = ctx.voice_client.channel #Get the channel that the bot is in
+        authorvoice = ctx.author.voice.channel#Get the channel that the author is in
+        voice_channel = ctx.voice_client      #Create voice_channel object for the bot
+        if(botchannel == authorvoice):        #Check if bot is in same channel as user
+          if(voice_channel.is_playing()):     #If it's the same -> Check if sound is playing
+            voice_channel.stop()              #Stop playing
+            voice_channel.play(source)        #start the new sound
+          else:                               #If not playing
+            voice_channel.play(source)        #Play the sound
+        else:                                 #If bot and author are not in the same channel
+          if(voice_channel.is_playing()):     #Check if a sound is playing
+            voice_channel.stop()              #Stop the sound
+          await voice_channel.disconnect()    #disconnect
+          voice2 = await authorvoice.connect()  #create new instance of voicechannel - With author's voice ID
+          voice2.play(source)                 #Play the new sound
   else:
     await ctx.send("Uh Oh, That chip does not exist")#if file doesn't exist
-  print("-----------------------------------")
 
 #Activates Scary mode by command !hell
-@client.command(pass_context = True)
+@client.command(pass_context = True, help='22:30 GMT+2')
 async def hope(ctx): #CHANGE TO HELL!
   t = datetime.datetime.now(Timezone) #Set time variable
   if(t.hour > 22 and t.minute > 30):  #check if after 22:30
@@ -160,7 +208,7 @@ async def hope(ctx): #CHANGE TO HELL!
     await ctx.send("That function is not available at this time, try again later")
 
 # !joke command, sends joke upon request
-@client.command(pass_context = True)
+@client.command(pass_context = True,help='Get a joke')
 async def joke(ctx):
   url = "https://v2.jokeapi.dev/joke/Miscellaneous,Dark,Pun?type=single"
 
@@ -169,14 +217,39 @@ async def joke(ctx):
   await ctx.send(str(response['joke']))
 
 
-@client.command(pass_context = True)
+@client.command(pass_context = True, help='Introduction to the soundboard')
 async def commands(ctx):
   await ctx.send("```Hi There, I am ChipBot, your bot for custom sound effects in your Discord server. \n I was created in 2021 by an IT&Management student who likes programming. I am written in Python, the greatest program language (because it was invented by a Dutch man). \n I currently listen to the following commands:\n-----------------------------------------\n!sound [soundname] - To play a sound, uploaded to the bot.\n\n Go to http://chipbot.tk/ to add a sound to the bot \n\n!joke - To get a joke.\n\n !leave - To let the bot leave your voice channel.\n\n !h*ll - Try this after 22:30, if you are brave enough```")
 
-  
+@client.command(pass_context = True, help='Show all sounds for your server')
+async def soundlist(ctx):
+	serverid = str(ctx.message.guild.id)
+	list = []
+	for f in os.listdir('/var/chips'):
+		if re.match(serverid, f):
+			x = (f.split('_'))
+			y = (x[1].split('.'))
+			list.append(y[0])
+	b = "  ".join(list)
+	await ctx.send("```Available Sounds:\n----------------------------\n" + b + "```")
 
+@client.command(pass_context=True)
+async def space(ctx):
+
+	url = 'http://api.open-notify.org/iss-now.json'
+
+	r = requests.get(url).json()
+
+	epoch = r['timestamp']
+	timestamp = (datetime.utcfromtimestamp(int(epoch)).strftime('%H:%M:%S - %d-%m-%Y'))
+
+	lat = r['iss_position']['latitude']
+	lon = r['iss_position']['longitude']
+
+	await ctx.send("ISS LOCATION AT " + str(timestamp) + "\n Latitude:  " + lat + "\n Longitude: " + lon)	
 #run the bot & keep alive
 
 keep_alive()
-client.run(os.getenv("TOKEN"))
+client.run("Nzg0MTE5NjM1NTM2Mzc5OTE0.X8kqUQ.SnojVfPVu5YEuLz0a5zUOPtR4Jw")
+
 
