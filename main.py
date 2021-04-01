@@ -250,6 +250,6 @@ async def space(ctx):
 #run the bot & keep alive
 
 keep_alive()
-client.run("Nzg0MTE5NjM1NTM2Mzc5OTE0.X8kqUQ.SnojVfPVu5YEuLz0a5zUOPtR4Jw")
+client.run("TOKEN")
 
 
