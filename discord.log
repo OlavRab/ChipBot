@@ -1,0 +1,3 @@
+2021-04-07 09:19:43,563:INFO:discord.client: logging in using static token
+2021-04-07 09:19:43,898:INFO:discord.gateway: Shard ID None has sent the IDENTIFY payload.
+2021-04-07 09:19:44,078:INFO:discord.gateway: Shard ID None has connected to Gateway: ["gateway-prd-main-vpbb",{"micros":75427,"calls":["discord-sessions-prd-2-153",{"micros":70843,"calls":["start_session",{"micros":43790,"calls":["api-prd-main-3slz",{"micros":40929,"calls":["get_user",{"micros":3761},"add_authorized_ip",{"micros":1853},"get_guilds",{"micros":7339},"coros_wait",{"micros":1}]}]},"guilds_connect",{"micros":7,"calls":[]},"presence_connect",{"micros":22080,"calls":[]}]}]}] (Session ID: 6558599011196fc4f6a6a917ea469f6f).

@@ -16,14 +16,17 @@ from pytz import timezone
 from keep_alive import keep_alive
 import re
 import logging
+import subprocess
+from dotenv import load_dotenv
 
-
+#Set logging variables
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
+#Set required Discord params
 intens = discord.Intents.default()
 intens.members = True
 Timezone = timezone('Europe/Amsterdam')
@@ -36,7 +39,34 @@ scared = False
 # fp = open(pfp_path, 'rb')
 # pfp = fp.read()
 
+#Welcome message upon bot joining
+@client.event
+async def on_guild_join(guild):
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+          embed=discord.Embed(title="Welcome to Chipbot", url="http://www.chipbot.tk", description="This is a short introduction @everyone", color=0x765e89)
+          embed.set_thumbnail(url="http://185.189.182.43/default.png")
+          embed.add_field(name="So you just added me", value="Great! I have a lot of cool features, but the most important is being a custom soundboard. You will find a guide on how to upload sounds below! Type !help for all my commands.", inline=False)
+          embed.add_field(name="How to upload sounds:", value="Go [www.chipbot.tk](http://185.189.182.43/upload.php) link below and click 'Add Chips'. Select an .mp3 file from your computer, give it a name and add the server id. Not sure what your server-id is? Type !serverinfo. After uploading, join a voicechannel and type !sound [name]", inline=False)
+          embed.add_field(name="Need Help?", value="Add me: @OlavRab#5982 or join the ChipBot Support Server: https://discord.gg/KSZYwqyeRV", inline=False)
+          await channel.send(embed=embed)
+        break
 
+#Clean up leftover sounds when the bot gets removed from the server to free up space
+@client.event
+async def on_guild_remove(guild):
+  for file in os.listdir('/var/chips'):
+    if file.startswith(str(guild)):
+      print(file)
+
+#Error Handling
+@client.event
+async def on_command_error(ctx,error):
+  if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+    await ctx.send("That command was not found, try !help for available commands")
+
+
+#Remove sound command
 @client.command(pass_context = True, help='Remove a sound')
 async def rmsound(ctx,message):
   serverid = ctx.message.guild.id
@@ -44,6 +74,8 @@ async def rmsound(ctx,message):
   path = "/var/chips/"+str(serverid)+"_"+str(sound)+".mp3"
   os.remove(path)
 
+
+#On Bot Startup
 @client.event
 async def on_ready():
   # await client.user.edit(avatar=pfp)
@@ -51,7 +83,7 @@ async def on_ready():
   print('Bot logged in as user: {0.user}'.format(client))
   print('-----------------------------------')
 
-#leave when everyone else leaves
+#leave voicechannel when everyone else leaves
 @client.event
 #get the details of the people in the voice
 async def on_voice_state_update(member, before, after):
@@ -74,23 +106,13 @@ async def leave(ctx):
     else:
       await ctx.send("I am not in a voice channel")
 
+
 #YouTube music player - WIP
-@client.command(pass_context=True)
+@client.command(pass_context=True, help='Work in progress')
 async def play(ctx, message):
 	link = message
 	await ctx.send(link)
 
-@client.command(pass_context = True)
-async def channel(ctx):
-  user_channel = ctx.author.voice.channel
-  bot_channel = ctx.voice_client.channel
-  if(ctx.voice_client is None):
-    await ctx.send("Not connected")
-  else:
-    if(user_channel == bot_channel):
-      await ctx.send("Same Channel")
-    else:
-      await ctx.send("Not the same channel")
 
 #Soundbot Command
 @client.command(pass_context= True, help='Play Audio by using !sound [Soundname]')
@@ -129,6 +151,7 @@ async def sound(ctx, message):
           voice2.play(source)                 #Play the new sound
   else:
     await ctx.send("Uh Oh, That chip does not exist")#if file doesn't exist
+
 
 #Activates Scary mode by command !hell
 @client.command(pass_context = True, help='22:30 GMT+2')
@@ -207,20 +230,20 @@ async def hope(ctx): #CHANGE TO HELL!
   else:
     await ctx.send("That function is not available at this time, try again later")
 
+
 # !joke command, sends joke upon request
 @client.command(pass_context = True,help='Get a joke')
 async def joke(ctx):
   url = "https://v2.jokeapi.dev/joke/Miscellaneous,Dark,Pun?type=single"
-
   response = requests.get(url).json()
-
   await ctx.send(str(response['joke']))
 
-
+#Introduction command
 @client.command(pass_context = True, help='Introduction to the soundboard')
 async def commands(ctx):
   await ctx.send("```Hi There, I am ChipBot, your bot for custom sound effects in your Discord server. \n I was created in 2021 by an IT&Management student who likes programming. I am written in Python, the greatest program language (because it was invented by a Dutch man). \n I currently listen to the following commands:\n-----------------------------------------\n!sound [soundname] - To play a sound, uploaded to the bot.\n\n Go to http://chipbot.tk/ to add a sound to the bot \n\n!joke - To get a joke.\n\n !leave - To let the bot leave your voice channel.\n\n !h*ll - Try this after 22:30, if you are brave enough```")
 
+#Soundlist command
 @client.command(pass_context = True, help='Show all sounds for your server')
 async def soundlist(ctx):
 	serverid = str(ctx.message.guild.id)
@@ -233,23 +256,90 @@ async def soundlist(ctx):
 	b = "  ".join(list)
 	await ctx.send("```Available Sounds:\n----------------------------\n" + b + "```")
 
-@client.command(pass_context=True)
+
+#ISS Command
+@client.command(pass_context=True, help='Get the current coordinates of the International Space Station')
 async def space(ctx):
-
 	url = 'http://api.open-notify.org/iss-now.json'
-
 	r = requests.get(url).json()
-
 	epoch = r['timestamp']
 	timestamp = (datetime.utcfromtimestamp(int(epoch)).strftime('%H:%M:%S - %d-%m-%Y'))
-
 	lat = r['iss_position']['latitude']
 	lon = r['iss_position']['longitude']
-
 	await ctx.send("ISS LOCATION AT " + str(timestamp) + "\n Latitude:  " + lat + "\n Longitude: " + lon)	
+
+#Get Latency to bot
+@client.command(pass_context= True, help='Get your latency(ping)')
+async def ping(ctx):
+  clientltc = client.latency * 1000
+  await ctx.send(f'Pong! - Your latency to the bot is: {round(clientltc)} ms')
+  
+#Serverinfo  
+@client.command(pass_context=True, help="Get information about the server")
+async def serverinfo(ctx):
+  name = str(ctx.guild.name)
+  if(ctx.guild.description is None):
+    description = "No description set"
+  else:
+    description = str(ctx.guild.description)
+  owner = str(ctx.guild.owner)
+  id = str(ctx.guild.id)
+  region = str(ctx.guild.region)
+  memberCount = str(ctx.guild.member_count)
+  icon = str(ctx.guild.icon_url)
+  embed = discord.Embed(
+      title=name + " Server Information",
+      description=description,
+      color=discord.Color.blue()
+    )
+  embed.set_thumbnail(url=icon)
+  embed.add_field(name="Owner", value=owner, inline=True)
+  embed.add_field(name="Server ID", value=id, inline=True)
+  embed.add_field(name="Region", value=region, inline=True)
+  embed.add_field(name="Member Count", value=memberCount, inline=True)
+  await ctx.send(embed=embed)
+
+#Admin Command
+@client.command(pass_context=True, help="Admin purposes only")
+async def admin(ctx, message):
+  if(message == "s1"):
+    if(ctx.author.id == AUTHORID):
+      servers = []
+      output = set()
+      for f in os.listdir('/var/chips'):
+        x = (f.split('_'))
+        y = x[0]
+        servers.append(y)
+      unique_numbers = list(set(servers)) 
+      b = "  ".join(unique_numbers)
+      await ctx.send(b)   
+    else:
+      await ctx.send("It seems that you are not an admin, sorry")
+
+
+@client.command(pass_context=True, help="See available space on server")
+async def storage(ctx):
+  x = subprocess.run(['df -h /home --output=avail,used,size'], shell=True, capture_output=True)
+  output = str(x.stdout)
+  split_output = output.split(" ")
+  available = split_output[6]
+  used = split_output[8]
+  total = split_output[11]
+  available_memory = int(available.split("G")[0])
+  used_memory = float(used.split("G")[0])
+  total_memory = int(total.split("G")[0])
+  await ctx.send("**Memory Status on the ChipBot VPS: **" + "\n Used Space:" + str(used_memory) + " Gigabytes\n Free Space: " + str(total_memory)+ " Gigabytes\n Note that this storage is shared with all ChipBot users!")
+
+@client.command(pass_context=True, help="See the available RAM on the server")
+async def ram(ctx):
+  x = subprocess.run(['free -m'], shell=True, capture_output=True)
+  output = str(x.stdout)
+  split_output = output.split(" ")
+  print(split_output)
+  
 #run the bot & keep alive
 
 keep_alive()
-client.run("TOKEN")
+client.run(TOKEN)
 
 
