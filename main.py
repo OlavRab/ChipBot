@@ -11,13 +11,17 @@ import os.path
 from os import path
 import json
 import datetime
-from datetime import datetime
 from pytz import timezone
 from keep_alive import keep_alive
 import re
 import logging
 import subprocess
 from dotenv import load_dotenv
+import youtube_dl
+from youtube_dl import YoutubeDL
+import csv
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Set logging variables
 logger = logging.getLogger('discord')
@@ -31,13 +35,28 @@ intens = discord.Intents.default()
 intens.members = True
 Timezone = timezone('Europe/Amsterdam')
 
+#Set .env files
+load_dotenv(dotenv_path='keys.env')
+
 #bot Prefix + Define scared variable
 client = commands.Bot(command_prefix = '!', intents=intens)
 scared = False
 
+#open logfile
+
+
+#Uncomment th change new icon
 # pfp_path = "cover.png"
 # fp = open(pfp_path, 'rb')
 # pfp = fp.read()
+
+#On Bot Startup
+@client.event
+async def on_ready():
+  # await client.user.edit(avatar=pfp)
+  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
+  print('Bot logged in as user: {0.user}'.format(client))
+  print('-----------------------------------')
 
 #Welcome message upon bot joining
 @client.event
@@ -53,11 +72,14 @@ async def on_guild_join(guild):
         break
 
 #Clean up leftover sounds when the bot gets removed from the server to free up space
-@client.event
-async def on_guild_remove(guild):
-  for file in os.listdir('/var/chips'):
-    if file.startswith(str(guild)):
-      print(file)
+# @client.event
+# async def on_guild_remove(guild):
+#   print("I Have been kicked")
+#   guildid = guild.id
+#   for file in os.listdir('/var/chips'+):
+#     if file.startswith(str(guildid)):
+#       filename = '/var/chips/'+str(file)
+#       os.remove(filename)
 
 #Error Handling
 @client.event
@@ -71,17 +93,10 @@ async def on_command_error(ctx,error):
 async def rmsound(ctx,message):
   serverid = ctx.message.guild.id
   sound = message
-  path = "/var/chips/"+str(serverid)+"_"+str(sound)+".mp3"
+  path = "/var/chips/"+str(serverid)+"/"+str(sound)+".mp3"
   os.remove(path)
+  await ctx.send(sound + " has been removed!")
 
-
-#On Bot Startup
-@client.event
-async def on_ready():
-  # await client.user.edit(avatar=pfp)
-  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
-  print('Bot logged in as user: {0.user}'.format(client))
-  print('-----------------------------------')
 
 #leave voicechannel when everyone else leaves
 @client.event
@@ -107,63 +122,109 @@ async def leave(ctx):
       await ctx.send("I am not in a voice channel")
 
 
-#YouTube music player - WIP
-@client.command(pass_context=True, help='Work in progress')
-async def play(ctx, message):
-	link = message
-	await ctx.send(link)
+# @client.command(pass_context=True, help="Play YouTube Sounds")
+# async def play(ctx, url: str):
+#   # Youtube_DL options
+#   # SAVE_PATH = '/'.join(os.getcwd().split('/')[:3]) + '/ftp/upload/ChipBot/youtube'
+#   ydl_opts = {
+#     'format': 'bestaudio/best',
+#     'postprocessors': [{
+#         'key': 'FFmpegExtractAudio',
+#         'preferredcodec': 'mp3',
+#         'preferredquality': '192',
+#     }],
+#     # 'outtmpl':SAVE_PATH + '/%(title)s.%(ext)s',
+#   }
+#   if(ctx.author.voice is None):
+#     print("User not in voice")
+#   else:
+#     channel = ctx.author.voice.channel 
+#     if(ctx.voice_client is None):
+#       print("Bot not in voicechannel")
+#       voice = await channel.connect()
+#     else:
+#       print('Bot was already connected to voice')
 
+#   with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+#     await ctx.send("Loading... be patient")
+#     song_info = ydl.extract_info(url, download=False)
+#     print(song_info)
+#     # ydl.download([url])
+#   for file in os.listdir("./"):
+#     if file.endswith(".mp3"):
+#       os.rename(file, "song.mp3")
+#   voice.play(discord.FFmpegPCMAudio("song.mp3"))
+  
 
 #Soundbot Command
 @client.command(pass_context= True, help='Play Audio by using !sound [Soundname]')
 async def sound(ctx, message):
-  serverid = ctx.message.guild.id
-  mp3 = "/var/chips/"+str(serverid) + "_" + message + ".mp3"
-  print(mp3)
-  if(path.exists(mp3)):#check if file exists
-    source = FFmpegPCMAudio(mp3)
-    if(ctx.author.voice is None):   #is author in a voice channel?
-      await ctx.send("Please join a voice channel first!")   #join channel first
-    else:    #if author is in voice channel
-      channel = ctx.author.voice.channel      #set channel var to author's channel
-      if(ctx.voice_client is None):           #Check if bot is not in voice
-        voice = await channel.connect()       #If not -> Connect to channel with Author ID
-        if(voice.is_playing()):               #If voice is already playing
-          voice.stop()                        #Stop talking and start new sound
-          voice.play(source)                
-        else:                                 #If bot wasn't playing, start new sound
-          voice.play(source)            
-      else:                                   #If the bot is already connected to A channel
-        botchannel = ctx.voice_client.channel #Get the channel that the bot is in
-        authorvoice = ctx.author.voice.channel#Get the channel that the author is in
-        voice_channel = ctx.voice_client      #Create voice_channel object for the bot
-        if(botchannel == authorvoice):        #Check if bot is in same channel as user
-          if(voice_channel.is_playing()):     #If it's the same -> Check if sound is playing
-            voice_channel.stop()              #Stop playing
-            voice_channel.play(source)        #start the new sound
-          else:                               #If not playing
-            voice_channel.play(source)        #Play the sound
-        else:                                 #If bot and author are not in the same channel
-          if(voice_channel.is_playing()):     #Check if a sound is playing
-            voice_channel.stop()              #Stop the sound
-          await voice_channel.disconnect()    #disconnect
-          voice2 = await authorvoice.connect()  #create new instance of voicechannel - With author's voice ID
-          voice2.play(source)                 #Play the new sound
-  else:
-    await ctx.send("Uh Oh, That chip does not exist")#if file doesn't exist
+  try:
+    serverid = ctx.message.guild.id
+    servername = ctx.message.guild.name
+    mp3 = "/var/chips/"+str(serverid)+"/"+ message + ".mp3"
+    if(path.exists(mp3)):#check if file exists
+      source = FFmpegPCMAudio(mp3)
+      if(ctx.author.voice is None):   #is author in a voice channel?
+        await ctx.send("Please join a voice channel first!")   #join channel first
+      else:    #if author is in voice channel
+        channel = ctx.author.voice.channel      #set channel var to author's channel
+        if(ctx.voice_client is None):           #Check if bot is not in voice
+          voice = await channel.connect()       #If not -> Connect to channel with Author ID
+          if(voice.is_playing()):               #If voice is already playing
+            voice.stop()                        #Stop talking and start new sound
+            voice.play(source)                  #If bot wasn't playing, start new sound
+            logit(serverid, mp3, ctx.author,servername)
+          else: 	                       
+            voice.play(source)      
+            logit(serverid, mp3, ctx.author,servername)      
+        else:                                   #If the bot is already connected to A channel
+          botchannel = ctx.voice_client.channel #Get the channel that the bot is in
+          authorvoice = ctx.author.voice.channel#Get the channel that the author is in
+          voice_channel = ctx.voice_client      #Create voice_channel object for the bot
+          if(botchannel == authorvoice):        #Check if bot is in same channel as user
+            if(voice_channel.is_playing()):     #If it's the same -> Check if sound is playing
+              voice_channel.stop()              #Stop playing
+              voice_channel.play(source)        #start the new sound
+              logit(serverid, mp3, ctx.author,servername)      
+            else:                               #If not playing
+              voice_channel.play(source)        #Play the sound
+              logit(serverid, mp3, ctx.author,servername)  #log the play
+          else:                                 #If bot and author are not in the same channel
+            if(voice_channel.is_playing()):     #Check if a sound is playing
+              voice_channel.stop()              #Stop the sound
+            await voice_channel.disconnect()    #disconnect
+            voice2 = await authorvoice.connect()  #create new instance of voicechannel - With author's voice ID
+            voice2.play(source)                 #Play the new sound
+            logit(serverid, mp3, ctx.author,servername) 
+    else:
+      await ctx.send("Uh Oh, That chip does not exist")#if file doesn't exist
+  except Exception as e:
+    await ctx.send("__Sorry, something in my internal code broke:__ \n"+str(e))
 
+
+def logit(serverid, location, user, servername):
+  t = datetime.datetime.now()
+  date = t.strftime("%Y-%m-%d")
+  time = t.strftime("%H:%M:%S")
+  y = location.split("/")
+  newlocation = "/"+y[1]+"/"+y[2]+"/"+y[3]+"_"+y[4]
+  with open('soundboard.csv' , 'a', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow([date,time, serverid, newlocation, user, servername])
 
 #Activates Scary mode by command !hell
 @client.command(pass_context = True, help='22:30 GMT+2')
-async def hope(ctx): #CHANGE TO HELL!
-  t = datetime.datetime.now(Timezone) #Set time variable
-  if(t.hour > 22 and t.minute > 30):  #check if after 22:30
+async def hell(ctx): #CHANGE TO HELL!
+  # t = datetime.datetime.now(Timezone) #Set time variable
+  t = datetime.datetime.now()
+  if t.strftime('%A') == "Friday" and t.hour > 22 and t.minute > 30:
     scared = True
-    ss1 = FFmpegPCMAudio("sounds/scarymode/monster.mp3")
-    ss3 = FFmpegPCMAudio("sounds/scarymode/laugh.mp3")
-    ss4 = FFmpegPCMAudio("sounds/scarymode/geist.mp3")
-    ss5 = FFmpegPCMAudio("sounds/scarymode/door.mp3")
-    ss6 = FFmpegPCMAudio("sounds/scarymode/heart.mp3")
+    ss1 = FFmpegPCMAudio("/var/chips/scary_mode/monster.mp3")
+    ss3 = FFmpegPCMAudio("/var/chips/scary_mode/laugh.mp3")
+    ss4 = FFmpegPCMAudio("/var/chips/scary_mode/geist.mp3")
+    ss5 = FFmpegPCMAudio("/var/chips/scary_mode/door.mp3")
+    ss6 = FFmpegPCMAudio("/var/chips/scary_mode/heart.mp3")
     print('Scary Mode activated')
     if(ctx.author.voice is None):
       await ctx.send("Please join a voice channel first!")
@@ -204,7 +265,7 @@ async def hope(ctx): #CHANGE TO HELL!
     time.sleep(8)
     await ctx.send("```Reconnect Failed, Server Error - Debug Code: [666-666-666CR]```")
     time.sleep(10)
-    with open('sounds/scarymode/c1.jpg', 'rb') as f:
+    with open('/var/chips/scary_mode/c1.jpg', 'rb') as f:
       picture = discord.File(f)
       await ctx.send(file=picture)
     await ctx.send("```You will not run from us```")
@@ -230,6 +291,57 @@ async def hope(ctx): #CHANGE TO HELL!
   else:
     await ctx.send("That function is not available at this time, try again later")
 
+@client.command(pass_context=True, help="Find your love")
+async def test2 (ctx,message):
+  await ctx.send("Error")
+
+@client.command(pass_context=True, help="Add a coin in quotes and get the values")
+async def crypto (ctx, coin):
+  if coin:
+    print('hallo')
+    msg = coin.lower()
+    msg = msg.replace(" ", "-")
+    url_history = "https://api.coincap.io/v2/assets/"+msg+"/history?interval=d1"
+    url_name = "https://api.coincap.io/v2/assets/"+msg
+    response_history = requests.get(url_history).json()
+    response_name = requests.get(url_name).json()
+    await ctx.send("URL Called - " + url_history)
+    coin_name = response_name['data']['name']
+    latest_price = float(response_name['data']['priceUsd'])
+    rounded = round(latest_price,2)
+    await ctx.send(coin_name+ "/USD = $" + str(rounded))
+    time = []
+    value = []
+
+    i = 1
+    while i < 30:
+        time.append(response_history['data'][i]['date'])
+        value.append(float(response_history['data'][i]['priceUsd']))
+        i = i + 1
+
+    await ctx.send(time)
+
+    plt.plot(time, value)
+    ax = plt.gca()
+    # ax.axes.xaxis.set_visible(False)  
+    plt.xticks([time[0], time[-1]], visible=True, rotation="horizontal")
+    # naming the x axis
+    plt.xlabel('Time')
+    # naming the y axis
+    plt.ylabel('Value in $')
+      
+    # giving a title to my graph
+    plt.title(coin_name + " - Last year's performance")
+
+    plt.savefig('test.png')
+    with open("test.png", "rb") as fh:
+      f = discord.File(fh, filename="test.png")
+    await ctx.send(file=f)
+
+    os.remove("test.png")
+  else:
+    print("Joe")
+    await ctx.send("No coin was passed, fill a supported coin in quotes ''")
 
 # !joke command, sends joke upon request
 @client.command(pass_context = True,help='Get a joke')
@@ -244,21 +356,19 @@ async def commands(ctx):
   await ctx.send("```Hi There, I am ChipBot, your bot for custom sound effects in your Discord server. \n I was created in 2021 by an IT&Management student who likes programming. I am written in Python, the greatest program language (because it was invented by a Dutch man). \n I currently listen to the following commands:\n-----------------------------------------\n!sound [soundname] - To play a sound, uploaded to the bot.\n\n Go to http://chipbot.tk/ to add a sound to the bot \n\n!joke - To get a joke.\n\n !leave - To let the bot leave your voice channel.\n\n !h*ll - Try this after 22:30, if you are brave enough```")
 
 #Soundlist command
-@client.command(pass_context = True, help='Show all sounds for your server')
+@client.command(pass_context=True, help="Show all sounds in your server!")
 async def soundlist(ctx):
-	serverid = str(ctx.message.guild.id)
-	list = []
-	for f in os.listdir('/var/chips'):
-		if re.match(serverid, f):
-			x = (f.split('_'))
-			y = (x[1].split('.'))
-			list.append(y[0])
-	b = "  ".join(list)
-	await ctx.send("```Available Sounds:\n----------------------------\n" + b + "```")
-
+  serverid = str(ctx.message.guild.id)
+  path = "/var/chips/"+serverid
+  list = []
+  for f in os.listdir(path):
+    list.append(f.split(".")[0])
+  b = "  ".join(list)
+  await ctx.send("```Available Sounds:\n----------------------------\n" + b + "```")
+    
 
 #ISS Command
-@client.command(pass_context=True, help='Get the current coordinates of the International Space Station')
+@client.command(pass_context=True, help='Get the current coordinates of the ISS')
 async def space(ctx):
 	url = 'http://api.open-notify.org/iss-now.json'
 	r = requests.get(url).json()
@@ -288,7 +398,7 @@ async def serverinfo(ctx):
   memberCount = str(ctx.guild.member_count)
   icon = str(ctx.guild.icon_url)
   embed = discord.Embed(
-      title=name + " Server Information",
+      title=name + "Server Information",
       description=description,
       color=discord.Color.blue()
     )
@@ -299,11 +409,28 @@ async def serverinfo(ctx):
   embed.add_field(name="Member Count", value=memberCount, inline=True)
   await ctx.send(embed=embed)
 
+
+#Love Command
+@client.command(pass_context=True, help="Find your love")
+async def love(ctx,message):
+  url = "https://love-calculator.p.rapidapi.com/getPercentage"
+
+  querystring = {"fname":"John","sname":"Alice"}
+
+  headers = {
+    'x-rapidapi-key': "2df44f8855msh8680922143f6a75p1c535ejsnf3df2dee558c",
+    'x-rapidapi-host': "love-calculator.p.rapidapi.com"
+    }
+
+  response = requests.request("GET", url, headers=headers, params=querystring)
+
+  print(response.text)
+
 #Admin Command
 @client.command(pass_context=True, help="Admin purposes only")
 async def admin(ctx, message):
   if(message == "s1"):
-    if(ctx.author.id == AUTHORID):
+    if(ctx.author.id == int(os.environ.get("ADMIN-ID"))):
       servers = []
       output = set()
       for f in os.listdir('/var/chips'):
@@ -316,6 +443,9 @@ async def admin(ctx, message):
     else:
       await ctx.send("It seems that you are not an admin, sorry")
 
+@client.command(pass_context=True, help="Some very interesting things here")
+async def sexytime(ctx):
+  await ctx.send("You dirty man")
 
 @client.command(pass_context=True, help="See available space on server")
 async def storage(ctx):
@@ -336,10 +466,23 @@ async def ram(ctx):
   output = str(x.stdout)
   split_output = output.split(" ")
   print(split_output)
-  
-#run the bot & keep alive
+
+
+@client.command(pass_context=True, help="Get the latest currency")
+async def coin(ctx,message):
+  if not message:
+    await ctx.send("Please supply a coin name within brackets")
+  else:
+    msg = message.lower()
+    msg = msg.replace(" ", "-")
+    url = "https://api.coincap.io/v2/assets/"+msg
+    response = requests.get(url).json()
+    latest_price = float(response['data']['priceUsd'])
+    rounded = round(latest_price,2)
+    coin_name = response['data']['name']
+    await ctx.send(coin_name+ "/USD = $" + str(rounded))
 
 keep_alive()
-client.run(TOKEN)
+client.run(os.environ.get("TOKEN"))
 
 
