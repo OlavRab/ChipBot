@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}{{ guild.name }} — ChipBot{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Servers</a></li>
+    <li class="breadcrumb-item active">{{ guild.name }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+
+  <!-- Upload card -->
+  <div class="col-lg-4">
+    <div class="card p-4">
+      <h5 class="fw-semibold mb-3"><i class="bi bi-upload me-2" style="color:var(--chip-purple-light)"></i>Upload a Sound</h5>
+      <form method="POST" action="/server/{{ server_id }}/upload" enctype="multipart/form-data" id="uploadForm">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label class="form-label small text-secondary">Sound Name</label>
+          <input
+            type="text"
+            name="name"
+            class="form-control"
+            placeholder="e.g. airhorn"
+            pattern="^[\w\-]+$"
+            maxlength="40"
+            required
+            title="Letters, numbers, dashes and underscores only"
+          >
+          <div class="form-text text-secondary">Used as <code>!sound [name]</code> in Discord</div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small text-secondary">MP3 File <span class="text-muted">(max 400 KB)</span></label>
+          <input
+            type="file"
+            name="file"
+            class="form-control"
+            accept=".mp3,audio/mpeg"
+            required
+            id="fileInput"
+          >
+          <div id="fileSizeWarning" class="form-text text-danger d-none">
+            File exceeds 400 KB limit.
+          </div>
+        </div>
+
+        <button type="submit" class="btn w-100" style="background:var(--chip-purple);color:#fff;"
+          {% if sounds | length >= limit %}disabled title="Sound limit reached"{% endif %}>
+          <i class="bi bi-cloud-upload me-1"></i> Upload
+        </button>
+        {% if sounds | length >= limit %}
+          <div class="form-text text-danger mt-2">
+            Limit reached ({{ tier | capitalize }} tier: {{ limit }} sounds). Contact the admin to upgrade.
+          </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="card p-3 mt-3">
+      <div class="small text-secondary">
+        <i class="bi bi-info-circle me-1"></i>
+        After uploading, join a voice channel in <strong>{{ guild.name }}</strong> and type
+        <code>!sound [name]</code> in any text channel.
+      </div>
+    </div>
+  </div>
+
+  <!-- Sound list -->
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h5 class="fw-semibold mb-0">
+        <i class="bi bi-music-note-list me-2" style="color:var(--chip-purple-light)"></i>
+        Sounds
+        <span class="badge ms-1
+          {% if tier == 'premium' %}bg-warning text-dark
+          {% elif tier == 'pro' %}bg-info text-dark
+          {% else %}bg-secondary{% endif %}" style="font-size:.65rem;">
+          {{ tier | capitalize }}
+        </span>
+      </h5>
+      {% if sounds %}
+        <input type="text" id="searchInput" class="form-control form-control-sm w-auto" placeholder="Filter sounds…" style="max-width:180px">
+      {% endif %}
+    </div>
+
+    {% set pct = ((sounds | length) / limit * 100) | int %}
+    <div class="mb-3">
+      <div class="d-flex justify-content-between small text-secondary mb-1">
+        <span>{{ sounds | length }} / {{ limit }} sounds used</span>
+        {% if sounds | length >= limit %}
+          <span class="text-danger fw-semibold">Limit reached</span>
+        {% endif %}
+      </div>
+      <div class="progress" style="height:6px; background:#2a2a4a;">
+        <div class="progress-bar {% if pct >= 100 %}bg-danger{% elif pct >= 80 %}bg-warning{% else %}bg-success{% endif %}"
+             style="width:{{ [pct, 100] | min }}%;"></div>
+      </div>
+    </div>
+
+    {% if not sounds %}
+      <div class="card p-5 text-center text-secondary">
+        <i class="bi bi-soundwave fs-1 d-block mb-2"></i>
+        No sounds uploaded yet. Use the form to add the first one!
+      </div>
+    {% else %}
+      <div class="card">
+        <table class="table table-dark table-hover mb-0 align-middle" id="soundTable">
+          <thead>
+            <tr class="text-secondary small" style="border-bottom:1px solid #2a2a4a;">
+              <th class="ps-3">Name</th>
+              <th>Preview</th>
+              <th class="text-end pe-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sound in sounds %}
+            <tr class="sound-row" data-name="{{ sound }}">
+              <td class="ps-3">
+                <code class="text-light">{{ sound }}</code>
+              </td>
+              <td style="min-width:180px; max-width:280px;">
+                <audio controls preload="none">
+                  <source src="/server/{{ server_id }}/audio/{{ sound }}" type="audio/mpeg">
+                </audio>
+              </td>
+              <td class="text-end pe-3">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                  data-sound="{{ sound }}"
+                  data-server="{{ server_id }}"
+                  title="Delete {{ sound }}"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="background:#1a1a2e; border:1px solid #2a2a4a;">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-semibold">Delete sound</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2 text-secondary small">
+        Are you sure you want to delete <strong id="deleteModalName" class="text-light"></strong>?
+        This cannot be undone.
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteForm" method="POST">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Wire up the delete modal
+  document.getElementById('deleteModal').addEventListener('show.bs.modal', function(e) {
+    const btn = e.relatedTarget;
+    const sound = btn.dataset.sound;
+    const server = btn.dataset.server;
+    document.getElementById('deleteModalName').textContent = sound;
+    document.getElementById('deleteForm').action = `/server/${server}/delete/${sound}`;
+  });
+
+  // Live search/filter for the sound table
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      document.querySelectorAll('#soundTable tbody tr').forEach(row => {
+        row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+      });
+    });
+  }
+
+  // Client-side file size check before submit
+  document.getElementById('fileInput')?.addEventListener('change', function() {
+    const warn = document.getElementById('fileSizeWarning');
+    const tooBig = this.files[0] && this.files[0].size > 400 * 1024;
+    warn.classList.toggle('d-none', !tooBig);
+    document.querySelector('#uploadForm button[type=submit]').disabled = tooBig;
+  });
+</script>
+{% endblock %}

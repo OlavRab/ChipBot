@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}ChipBot — Soundboard{% endblock %}
+
+{% block content %}
+{% if not user %}
+  <!-- Landing page for logged-out users -->
+  <div class="text-center py-5">
+    <h1 class="fw-bold mb-2">ChipBot <span style="color:var(--chip-purple-light)">Soundboard</span></h1>
+    <p class="text-secondary mb-4">Upload custom sound clips to your Discord server and play them with <code>!sound [name]</code>.</p>
+
+    <div class="row justify-content-center g-3 mb-5">
+      <div class="col-md-3">
+        <div class="card p-3 text-center h-100">
+          <i class="bi bi-upload fs-2 mb-2" style="color:var(--chip-purple-light)"></i>
+          <div class="fw-semibold">Upload</div>
+          <div class="text-secondary small">Add .mp3 clips up to 400 KB to any server you're in</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 text-center h-100">
+          <i class="bi bi-volume-up fs-2 mb-2" style="color:var(--chip-purple-light)"></i>
+          <div class="fw-semibold">Play</div>
+          <div class="text-secondary small">Type <code>!sound [name]</code> in Discord to play in voice</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 text-center h-100">
+          <i class="bi bi-play-circle fs-2 mb-2" style="color:var(--chip-purple-light)"></i>
+          <div class="fw-semibold">Preview</div>
+          <div class="text-secondary small">Listen to sounds in your browser before playing in Discord</div>
+        </div>
+      </div>
+    </div>
+
+    <a href="/auth/login" class="btn btn-discord btn-lg px-5">
+      <i class="bi bi-discord me-2"></i>Login with Discord to get started
+    </a>
+  </div>
+
+{% else %}
+  <!-- Server list for logged-in users -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="mb-0 fw-semibold">Your Servers</h4>
+    <span class="text-secondary small">{{ servers | length }} servers</span>
+  </div>
+
+  {% if not servers %}
+    <div class="text-center text-secondary py-5">
+      <i class="bi bi-discord fs-1 d-block mb-2"></i>
+      You are not in any Discord servers yet.
+    </div>
+  {% else %}
+    <div class="row g-3">
+      {% for s in servers %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <a href="/server/{{ s.id }}" class="text-decoration-none">
+            <div class="card p-3 h-100 d-flex flex-row align-items-center gap-3">
+              {% if s.icon %}
+                <img src="https://cdn.discordapp.com/icons/{{ s.id }}/{{ s.icon }}.png?size=64"
+                     class="server-icon" alt="{{ s.name }}">
+              {% else %}
+                <div class="server-icon-placeholder">{{ s.name[0] | upper }}</div>
+              {% endif %}
+              <div class="overflow-hidden">
+                <div class="fw-semibold text-light text-truncate">{{ s.name }}</div>
+                <div class="small text-secondary">
+                  {% if s.count > 0 %}
+                    <span class="badge badge-count">{{ s.count }}/{{ s.limit }}</span>
+                  {% else %}
+                    <span class="text-muted">No sounds yet</span>
+                  {% endif %}
+                  <span class="badge ms-1
+                    {% if s.tier == 'premium' %}bg-warning text-dark
+                    {% elif s.tier == 'pro' %}bg-info text-dark
+                    {% else %}bg-secondary{% endif %}" style="font-size:.6rem;">
+                    {{ s.tier | capitalize }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

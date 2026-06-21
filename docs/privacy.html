@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — ChipBot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+    .container { max-width: 740px; margin: 0 auto; padding: 3rem 1.5rem; }
+    nav { margin-bottom: 2.5rem; }
+    nav a { color: #9b7db5; text-decoration: none; font-size: .9rem; }
+    nav a:hover { text-decoration: underline; }
+    h1 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: .4rem; }
+    .subtitle { color: #666; font-size: .9rem; margin-bottom: 2.5rem; }
+    h2 { font-size: 1.1rem; font-weight: 700; color: #c0a8d8; margin: 2rem 0 .6rem; }
+    p { color: #bbb; margin-bottom: .8rem; }
+    ul { color: #bbb; padding-left: 1.4rem; margin-bottom: .8rem; }
+    li { margin-bottom: .3rem; }
+    a { color: #9b7db5; }
+    .table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th { background: #1a1a2e; color: #c0a8d8; text-align: left; padding: .6rem .9rem; border: 1px solid #2a2a4a; }
+    td { padding: .6rem .9rem; border: 1px solid #2a2a4a; color: #bbb; vertical-align: top; }
+    footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #222; color: #555; font-size: .85rem; }
+    footer a { color: #9b7db5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav><a href="index.html">← ChipBot</a></nav>
+
+    <h1>Privacy Policy</h1>
+    <p class="subtitle">Last updated: June 2026</p>
+
+    <p>This Privacy Policy explains what information ChipBot collects, how it is used, and how it is stored. By using ChipBot you agree to the practices described here.</p>
+
+    <h2>1. Who We Are</h2>
+    <p>ChipBot is operated by an individual developer. You can contact us at <a href="mailto:xdolavxd@gmail.com">xdolavxd@gmail.com</a> with any privacy-related questions.</p>
+
+    <h2>2. What Data We Collect</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Why we collect it</th>
+            <th>Where it's stored</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Discord Server ID</td>
+            <td>To associate uploaded sounds with the correct server</td>
+            <td>Server filesystem / database</td>
+          </tr>
+          <tr>
+            <td>Discord User ID &amp; username</td>
+            <td>To attribute sound plays to users in usage logs; to verify server membership during OAuth login</td>
+            <td>Usage log (CSV file on server)</td>
+          </tr>
+          <tr>
+            <td>Uploaded .mp3 files</td>
+            <td>Core service functionality — playing sounds in voice channels</td>
+            <td>Server filesystem, organised by server ID</td>
+          </tr>
+          <tr>
+            <td>Sound play events</td>
+            <td>Usage analytics (which sounds are played, by whom, in which server)</td>
+            <td>CSV log file on server</td>
+          </tr>
+          <tr>
+            <td>Discord OAuth access token</td>
+            <td>To fetch your server list so you can manage sounds on the website</td>
+            <td>Server-side session only — never persisted to disk</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>We do not collect message content, voice data, personal addresses, payment information, or any data beyond what is listed above.</p>
+
+    <h2>3. How We Use Your Data</h2>
+    <ul>
+      <li>To store and serve your uploaded sounds within Discord voice channels</li>
+      <li>To enforce per-server upload limits</li>
+      <li>To attribute sound play events in usage logs for analytics purposes</li>
+      <li>To verify Discord server membership when you use the upload website</li>
+    </ul>
+    <p>We do not sell, trade, or share your data with third parties, except as required by law.</p>
+
+    <h2>4. Data Retention</h2>
+    <p>Sound files are stored for as long as the bot remains in your server. When ChipBot is removed from a server, all associated sound files are deleted. Usage logs are retained for operational purposes and reviewed periodically.</p>
+    <p>OAuth session data (your Discord access token and guild list) is held only in your browser session and is discarded when you log out or your session expires.</p>
+
+    <h2>5. Third-Party Services</h2>
+    <p>ChipBot interacts with the following third-party services:</p>
+    <ul>
+      <li><strong>Discord</strong> — the platform the bot operates on. Discord's own <a href="https://discord.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> applies to your use of their platform.</li>
+      <li><strong>CoinCap API</strong> — used for the <code>!crypto</code> command. No personal data is sent; only a coin name is included in the request.</li>
+      <li><strong>JokeAPI</strong> — used for the <code>!joke</code> command. No personal data is sent.</li>
+      <li><strong>Open Notify API</strong> — used for the <code>!space</code> command. No personal data is sent.</li>
+    </ul>
+
+    <h2>6. Your Rights</h2>
+    <p>You may request deletion of your data at any time by contacting us at <a href="mailto:xdolavxd@gmail.com">xdolavxd@gmail.com</a>. For sound files, you can also delete them directly via the upload website or using the <code>!rmsound</code> Discord command (requires Manage Guild permission).</p>
+
+    <h2>7. Security</h2>
+    <p>We take reasonable technical measures to protect stored data, including path validation on all file operations and token-based authentication for administrative endpoints. However, no system is perfectly secure, and we cannot guarantee absolute security.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>ChipBot is not directed at children under 13. We do not knowingly collect data from children under 13. If you believe a child has provided us with personal data, please contact us and we will delete it.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. The date at the top of this page reflects the most recent revision. Continued use of the service after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>10. Contact</h2>
+    <p>Privacy questions or data deletion requests: <a href="mailto:xdolavxd@gmail.com">xdolavxd@gmail.com</a></p>
+
+    <footer>
+      &copy; 2026 ChipBot &nbsp;·&nbsp;
+      <a href="tos.html">Terms of Service</a> &nbsp;·&nbsp;
+      <a href="privacy.html">Privacy Policy</a>
+    </footer>
+  </div>
+</body>
+</html>

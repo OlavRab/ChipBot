@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Bot runtime artifacts
+discord.log
+soundboard.csv
+chart.png
+chipbot.db
+sounds/
+sounds_local/
+
+# Editor backups
+*.save
+*.save.*
+
+# Secrets — never commit these
+keys.env
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
