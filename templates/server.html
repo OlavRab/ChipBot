@@ -82,6 +82,11 @@
           {{ tier | capitalize }}
         </span>
       </h5>
+      {% if tier != 'premium' %}
+        <a href="/server/{{ server_id }}/upgrade" class="btn btn-sm" style="background:var(--chip-purple);color:#fff;">
+          <i class="bi bi-arrow-up-circle me-1"></i> Upgrade
+        </a>
+      {% endif %}
       {% if sounds %}
         <input type="text" id="searchInput" class="form-control form-control-sm w-auto" placeholder="Filter sounds…" style="max-width:180px">
       {% endif %}

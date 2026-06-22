@@ -34,6 +34,9 @@ app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 SOUNDS_BASE = os.environ.get('SOUNDS_BASE', '/var/chips')
 MAX_BYTES = 400 * 1024  # 400 KB
 
+REVOLUT_PRO_LINK = os.environ.get('REVOLUT_PRO_LINK', '')
+REVOLUT_PREMIUM_LINK = os.environ.get('REVOLUT_PREMIUM_LINK', '')
+
 DISCORD_CLIENT_ID = os.environ.get('DISCORD_CLIENT_ID', '')
 DISCORD_CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET', '')
 DISCORD_REDIRECT_URI = os.environ.get('DISCORD_REDIRECT_URI', '')
@@ -337,6 +340,23 @@ def admin_set_tier():
     return redirect(url_for('admin_panel'))
 
 
+@app.route('/server/<server_id>/upgrade')
+@login_required
+@guild_member_required
+def upgrade(server_id: str):
+    guild = session['guilds'][server_id]
+    tier = _db.get_tier(server_id)
+    return render_template(
+        'upgrade.html',
+        guild=guild,
+        server_id=server_id,
+        user=session['user'],
+        tier=tier,
+        pro_link=REVOLUT_PRO_LINK,
+        premium_link=REVOLUT_PREMIUM_LINK,
+    )
+
+
 @app.route('/server/<server_id>/audio/<sound_name>')
 @login_required
 @guild_member_required
@@ -346,6 +366,42 @@ def audio(server_id: str, sound_name: str):
     if path is None or not os.path.isfile(path):
         abort(404)
     return send_file(path, mimetype='audio/mpeg')
+
+
+# ---------------------------------------------------------------------------
+# Test helpers — only active when TEST_MODE=1 and TEST_SECRET is set
+# ---------------------------------------------------------------------------
+
+_TEST_MODE = os.environ.get('TEST_MODE', '') == '1'
+_TEST_SECRET = os.environ.get('TEST_SECRET', '')
+
+
+@app.route('/test/login', methods=['POST'])
+def test_login():
+    """Create a test session. Requires TEST_MODE=1 and correct TEST_SECRET header."""
+    if not _TEST_MODE or not _TEST_SECRET:
+        abort(404)
+    if request.headers.get('X-Test-Secret') != _TEST_SECRET:
+        abort(403)
+    data = request.get_json(force=True) or {}
+    server_id = data.get('server_id', 'test_server')
+    session['user'] = {'id': 'test_user', 'username': 'TestUser', 'avatar': None}
+    session['guilds'] = {server_id: {'id': server_id, 'name': 'Test Server', 'icon': None}}
+    session['csrf'] = 'test-csrf-token'
+    return {'ok': True, 'csrf': 'test-csrf-token'}
+
+
+@app.route('/test/cleanup/<server_id>/<sound_name>', methods=['POST'])
+def test_cleanup(server_id: str, sound_name: str):
+    """Delete a test sound. Requires TEST_MODE=1 and correct TEST_SECRET header."""
+    if not _TEST_MODE or not _TEST_SECRET:
+        abort(404)
+    if request.headers.get('X-Test-Secret') != _TEST_SECRET:
+        abort(403)
+    path = _safe_sound_path(server_id, sound_name)
+    if path and os.path.isfile(path):
+        os.remove(path)
+    return {'ok': True}
 
 
 # ---------------------------------------------------------------------------

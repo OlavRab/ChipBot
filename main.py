@@ -78,34 +78,37 @@ async def on_ready():
     print(f'Bot logged in as: {client.user}')
 
 
+UPLOAD_URL = os.environ.get('UPLOAD_URL', 'https://chipbot-production.up.railway.app')
+
+
 @client.event
 async def on_guild_join(guild):
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(
-                title="Welcome to Chipbot",
-                url="http://www.chipbot.tk",
-                description="This is a short introduction @everyone",
+                title="Hey, I'm ChipBot!",
+                url=UPLOAD_URL,
+                description="Your custom soundboard for Discord. Here's how to get started:",
                 color=0x765E89,
             )
             embed.add_field(
-                name="So you just added me",
+                name="Upload sounds",
                 value=(
-                    "I'm a custom soundboard! Upload sounds at chipbot.tk "
-                    "and play them with `!sound [name]`."
+                    f"Head to **[the upload site]({UPLOAD_URL})**, log in with Discord, "
+                    "select this server, and upload an `.mp3` (max 400 KB)."
                 ),
                 inline=False,
             )
             embed.add_field(
-                name="How to upload sounds",
-                value=(
-                    "Go to chipbot.tk, click *Add Chips*, select an .mp3 (max 400 KB), "
-                    "give it a name, and add your server ID. "
-                    "Not sure what your server ID is? Type `!serverinfo`."
-                ),
+                name="Play a sound",
+                value="Join a voice channel and type `!sound [name]`.",
                 inline=False,
             )
-            embed.add_field(name="Need Help?", value="Type `!help` for all commands.", inline=False)
+            embed.add_field(
+                name="Other commands",
+                value="`!soundlist` — see all sounds\n`!rmsound [name]` — delete a sound\n`!help` — full command list",
+                inline=False,
+            )
             await channel.send(embed=embed)
             break
 
@@ -175,7 +178,7 @@ async def sound(ctx, sound_name: str):
 async def soundlist(ctx):
     server_dir = os.path.join(SOUNDS_BASE, str(ctx.guild.id))
     if not os.path.isdir(server_dir):
-        await ctx.send("No sounds have been uploaded for this server yet. Visit chipbot.tk to upload some!")
+        await ctx.send(f"No sounds uploaded yet. Visit {UPLOAD_URL} to add some!")
         return
     names = sorted(f[:-4] for f in os.listdir(server_dir) if f.endswith('.mp3'))
     if not names:
@@ -226,7 +229,7 @@ async def info_cmd(ctx):
         "  !serverinfo      — Show server details\n"
         "  !ping            — Check bot latency\n"
         "  !space           — Get the current ISS location\n\n"
-        "Upload sounds at https://chipbot.site"
+        f"Upload sounds at {UPLOAD_URL}"
         "```"
     )
 
@@ -329,6 +332,22 @@ async def admin(ctx, subcommand: str, *args):
             if os.path.isdir(os.path.join(SOUNDS_BASE, d))
         )
         await ctx.send("  ".join(server_ids) if server_ids else "No servers found.")
+    elif subcommand == 'broadcast':
+        if not args:
+            await ctx.send("Usage: `!admin broadcast <message>`")
+            return
+        message = ' '.join(args)
+        sent, failed = 0, 0
+        for guild in client.guilds:
+            for channel in guild.text_channels:
+                if channel.permissions_for(guild.me).send_messages:
+                    try:
+                        await channel.send(message)
+                        sent += 1
+                    except discord.HTTPException:
+                        failed += 1
+                    break
+        await ctx.send(f"Broadcast sent to {sent} server(s). Failed: {failed}.")
     elif subcommand == 'tier':
         if len(args) != 2:
             await ctx.send("Usage: `!admin tier <server_id> <basic|pro|premium>`")

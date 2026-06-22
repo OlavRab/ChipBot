@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Upgrade {{ guild.name }} — ChipBot{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Servers</a></li>
+    <li class="breadcrumb-item"><a href="/server/{{ server_id }}" class="text-decoration-none">{{ guild.name }}</a></li>
+    <li class="breadcrumb-item active">Upgrade</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <h4 class="fw-semibold mb-1">Upgrade <span style="color:var(--chip-purple-light)">{{ guild.name }}</span></h4>
+    <p class="text-secondary mb-4">One-time payment — your server tier is upgraded permanently.</p>
+
+    <!-- Server ID callout -->
+    <div class="card p-4 mb-4" style="border-color: var(--chip-purple);">
+      <div class="small text-secondary mb-1"><i class="bi bi-info-circle me-1"></i> You'll need this during checkout</div>
+      <div class="d-flex align-items-center gap-3">
+        <div>
+          <div class="text-secondary small">Your Server ID</div>
+          <div class="fw-bold fs-5 font-monospace text-light" id="serverId">{{ server_id }}</div>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="copyServerId()">
+          <i class="bi bi-clipboard me-1"></i> Copy
+        </button>
+      </div>
+      <div class="small text-secondary mt-2">
+        <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+        Paste this in the <strong>"Server ID"</strong> field during payment so we know which server to upgrade.
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div class="row g-3 mb-4">
+
+      <!-- Pro -->
+      <div class="col-md-6">
+        <div class="card p-4 h-100 {% if tier == 'pro' %}border-info{% endif %}">
+          {% if tier == 'pro' %}
+            <span class="badge bg-info text-dark mb-2" style="width:fit-content;">Current plan</span>
+          {% endif %}
+          <h5 class="fw-semibold mb-1">Pro</h5>
+          <div class="fs-4 fw-bold mb-3">€7.50 <span class="fs-6 fw-normal text-secondary">one-time</span></div>
+          <ul class="list-unstyled text-secondary small mb-4">
+            <li class="mb-1"><i class="bi bi-check-lg text-success me-1"></i> 25 sounds per server</li>
+            <li class="mb-1"><i class="bi bi-check-lg text-success me-1"></i> Up from 10 (Basic)</li>
+          </ul>
+          {% if tier == 'pro' or tier == 'premium' %}
+            <button class="btn btn-outline-secondary btn-sm w-100 mt-auto" disabled>
+              {% if tier == 'pro' %}Already on Pro{% else %}Already upgraded{% endif %}
+            </button>
+          {% elif pro_link %}
+            <a href="{{ pro_link }}" target="_blank" rel="noopener" class="btn btn-sm w-100 mt-auto"
+               style="background:var(--chip-purple);color:#fff;">
+              <i class="bi bi-credit-card me-1"></i> Checkout — €7.50
+            </a>
+          {% else %}
+            <button class="btn btn-sm btn-outline-secondary w-100 mt-auto" disabled>Coming soon</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Premium -->
+      <div class="col-md-6">
+        <div class="card p-4 h-100 {% if tier == 'premium' %}border-warning{% endif %}">
+          {% if tier == 'premium' %}
+            <span class="badge bg-warning text-dark mb-2" style="width:fit-content;">Current plan</span>
+          {% endif %}
+          <h5 class="fw-semibold mb-1">Premium</h5>
+          <div class="fs-4 fw-bold mb-3">€15 <span class="fs-6 fw-normal text-secondary">one-time</span></div>
+          <ul class="list-unstyled text-secondary small mb-4">
+            <li class="mb-1"><i class="bi bi-check-lg text-success me-1"></i> 50 sounds per server</li>
+            <li class="mb-1"><i class="bi bi-check-lg text-success me-1"></i> Up from 10 (Basic)</li>
+          </ul>
+          {% if tier == 'premium' %}
+            <button class="btn btn-outline-secondary btn-sm w-100 mt-auto" disabled>Already on Premium</button>
+          {% elif premium_link %}
+            <a href="{{ premium_link }}" target="_blank" rel="noopener" class="btn btn-sm w-100 mt-auto"
+               style="background:#b8860b;color:#fff;">
+              <i class="bi bi-credit-card me-1"></i> Checkout — €15
+            </a>
+          {% else %}
+            <button class="btn btn-sm btn-outline-secondary w-100 mt-auto" disabled>Coming soon</button>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-secondary small">
+      <i class="bi bi-envelope me-1"></i>
+      After paying, upgrades are applied manually within 24 hours. Questions? Reach out via Discord.
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyServerId() {
+    navigator.clipboard.writeText('{{ server_id }}').then(() => {
+      const btn = document.querySelector('[onclick="copyServerId()"]');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Copied!';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy'; }, 2000);
+    });
+  }
+</script>
+{% endblock %}
