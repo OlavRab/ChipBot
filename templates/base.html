@@ -44,6 +44,7 @@
   <div class="container">
     <a class="navbar-brand fw-bold" href="/">Chip<span>Bot</span></a>
     <div class="ms-auto d-flex align-items-center gap-3">
+      <a href="https://discord.com/oauth2/authorize?client_id=784119635536379914" target="_blank" rel="noopener" class="btn btn-sm btn-discord"><i class="bi bi-plus-lg me-1"></i> Add to Server</a>
       {% if user %}
         {% set avatar_url = "https://cdn.discordapp.com/avatars/" ~ user.id ~ "/" ~ user.avatar ~ ".png?size=64" if user.avatar else "https://cdn.discordapp.com/embed/avatars/0.png" %}
         <img src="{{ avatar_url }}" class="avatar" alt="avatar">
