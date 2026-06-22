@@ -286,7 +286,7 @@ def upload(server_id: str):
     with open(path, 'wb') as f:
         f.write(data)
 
-    flash(f'"{sound_name}" uploaded successfully! Use !sound {sound_name} in Discord.', 'success')
+    flash(f'"{sound_name}" uploaded successfully! Use /sound {sound_name} in Discord.', 'success')
     return redirect(url_for('server', server_id=server_id))
 
 

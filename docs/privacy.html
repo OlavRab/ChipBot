@@ -58,7 +58,7 @@
           <tr>
             <td>Discord User ID &amp; username</td>
             <td>To attribute sound plays to users in usage logs; to verify server membership during OAuth login</td>
-            <td>Usage log (CSV file on server)</td>
+            <td>SQLite database on server</td>
           </tr>
           <tr>
             <td>Uploaded .mp3 files</td>
@@ -68,7 +68,7 @@
           <tr>
             <td>Sound play events</td>
             <td>Usage analytics (which sounds are played, by whom, in which server)</td>
-            <td>CSV log file on server</td>
+            <td>SQLite database on server</td>
           </tr>
           <tr>
             <td>Discord OAuth access token</td>
@@ -99,13 +99,13 @@
     <ul>
       <li><strong>Discord</strong> — the platform the bot operates on. Discord's own <a href="https://discord.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> applies to your use of their platform.</li>
       <li><strong>Revolut</strong> — used to process one-time upgrade payments. If you choose to upgrade your server tier, your Discord Server ID is included in the payment form so we can apply the upgrade. Revolut's own <a href="https://www.revolut.com/en-NL/legal/privacy/" target="_blank" rel="noopener">Privacy Policy</a> applies to payment data.</li>
-      <li><strong>CoinCap API</strong> — used for the <code>!crypto</code> command. No personal data is sent; only a coin name is included in the request.</li>
-      <li><strong>JokeAPI</strong> — used for the <code>!joke</code> command. No personal data is sent.</li>
-      <li><strong>Open Notify API</strong> — used for the <code>!space</code> command. No personal data is sent.</li>
+      <li><strong>CoinCap API</strong> — used for the <code>/crypto</code> command. No personal data is sent; only a coin name is included in the request.</li>
+      <li><strong>JokeAPI</strong> — used for the <code>/joke</code> command. No personal data is sent.</li>
+      <li><strong>Open Notify API</strong> — used for the <code>/space</code> command. No personal data is sent.</li>
     </ul>
 
     <h2>6. Your Rights</h2>
-    <p>You may request deletion of your data at any time by contacting us at <a href="mailto:olav@element6consulting.nl">olav@element6consulting.nl</a>. For sound files, you can also delete them directly via the upload website or using the <code>!rmsound</code> Discord command (requires Manage Guild permission).</p>
+    <p>You may request deletion of your data at any time by contacting us at <a href="mailto:olav@element6consulting.nl">olav@element6consulting.nl</a>. For sound files, you can also delete them directly via the upload website or using the <code>/rmsound</code> Discord command (requires Manage Server permission).</p>
 
     <h2>7. Security</h2>
     <p>We take reasonable technical measures to protect stored data, including path validation on all file operations and token-based authentication for administrative endpoints. However, no system is perfectly secure, and we cannot guarantee absolute security.</p>
