@@ -1,5 +1,5 @@
 {
-  "aptPackages": ["ffmpeg"],
+  "aptPkgs": ["ffmpeg"],
   "deploy": {
     "startCommand": "bash start.sh"
   }

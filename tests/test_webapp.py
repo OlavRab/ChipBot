@@ -12,6 +12,11 @@ os.environ.setdefault('DISCORD_REDIRECT_URI', 'http://localhost/auth/callback')
 os.environ.setdefault('SECRET_KEY', 'test-secret-key')
 os.environ.setdefault('SOUNDS_BASE', '/tmp/chipbot_test_sounds')
 
+# Ensure db.DB_PATH points somewhere writable before webapp is imported,
+# because webapp.py calls _db.init_db() at module level.
+import db as _db_mod
+_db_mod.DB_PATH = '/tmp/chipbot_test.db'
+
 # Mock load_dotenv to prevent it from trying to load keys.env during import
 with patch('dotenv.load_dotenv'):
     from webapp import app, _safe_sound_path, _is_mp3, _list_sounds

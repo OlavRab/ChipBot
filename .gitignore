@@ -35,5 +35,8 @@ keys.env
 .idea/
 .vscode/
 
+# Railway local link (machine-specific)
+.railway/
+
 # AI
 .claude
