@@ -1,7 +1,7 @@
 import os
 from threading import Thread
 
-from flask import Flask, abort, send_file, request
+from flask import Flask, request
 
 app = Flask('')
 
@@ -16,17 +16,6 @@ def _authorized() -> bool:
 @app.route('/')
 def home():
     return "Alive"
-
-
-@app.route('/log')
-def log():
-    if not _authorized():
-        abort(403)
-    try:
-        return send_file(os.path.abspath('soundboard.csv'))
-    except FileNotFoundError:
-        abort(404)
-
 
 def run():
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
