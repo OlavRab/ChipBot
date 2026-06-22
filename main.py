@@ -375,4 +375,4 @@ async def storage(ctx):
     )
 
 
-client.run(os.environ.get('TOKEN'))
+client.run(os.environ.get('TOKEN'), log_handler=None)
