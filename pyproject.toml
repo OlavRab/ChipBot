@@ -2,7 +2,7 @@
 name = "chipbot"
 version = "0.2.0"
 description = "Discord soundboard bot — play custom .mp3 clips in voice channels"
-authors = ["Olav van Rabenswaaij <Olav.van.rabenswaaij@gmail.com>"]
+authors = ["Olav van Rabenswaaij <olav@element6consulting.nl>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
