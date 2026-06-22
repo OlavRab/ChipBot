@@ -1,9 +1,9 @@
-import csv
 import datetime
 import logging
 import os
 import re
 import shutil
+import sys
 from typing import Optional
 
 import db as _db
@@ -23,11 +23,13 @@ SOUNDS_BASE = os.environ.get('SOUNDS_BASE', '/var/chips')
 ADMIN_ID = int(os.environ.get('ADMIN_ID') or '0')
 RAPIDAPI_KEY = os.environ.get('RAPIDAPI_KEY', '')
 
-logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
-_log_handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-_log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(_log_handler)
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+    datefmt='%Y-%m-%dT%H:%M:%S',
+)
+logger = logging.getLogger('chipbot')
 
 intents = discord.Intents.default()
 intents.members = True
@@ -51,19 +53,16 @@ def safe_sound_path(server_id: int, sound_name: str) -> Optional[str]:
     return target
 
 
-def _logit(server_id: int, location: str, user, server_name: str) -> None:
-    now = datetime.datetime.now()
-    parts = location.split('/')
-    short_loc = '/'.join(parts[:4]) + '_' + parts[4] if len(parts) > 4 else location
-    with open('soundboard.csv', 'a', newline='') as f:
-        csv.writer(f).writerow([
-            now.strftime('%Y-%m-%d'),
-            now.strftime('%H:%M:%S'),
-            server_id,
-            short_loc,
-            user,
-            server_name,
-        ])
+def _log_play(ctx, sound_name: str) -> None:
+    server_id = str(ctx.guild.id)
+    server_name = ctx.guild.name
+    user_id = str(ctx.author.id)
+    username = str(ctx.author)
+    logger.info('PLAY server=%s (%s) user=%s (%s) sound=%s', server_id, server_name, user_id, username, sound_name)
+    try:
+        _db.log_play(server_id, server_name, user_id, username, sound_name)
+    except Exception:
+        logger.exception('Failed to write play event to DB')
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +170,7 @@ async def sound(ctx, sound_name: str):
     if vc.is_playing():
         vc.stop()
     vc.play(source)
-    _logit(ctx.guild.id, path, ctx.author, ctx.guild.name)
+    _log_play(ctx, sound_name)
 
 
 @client.command(help='List all sounds available in this server')
