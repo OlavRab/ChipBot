@@ -72,7 +72,7 @@ def _log_play(interaction: discord.Interaction, sound_name: str) -> None:
 async def on_ready():
     await client.tree.sync()
     await client.change_presence(activity=discord.Activity(
-        type=discord.ActivityType.listening, name="/sound"
+        type=discord.ActivityType.listening, name="/chip"
     ))
     logger.info('Bot logged in as: %s', client.user)
 
@@ -99,13 +99,13 @@ async def on_guild_join(guild):
                 inline=False,
             )
             embed.add_field(
-                name="Play a sound",
-                value="Join a voice channel and type `/sound [name]` — autocomplete shows your sounds as you type.",
+                name="Play a chip",
+                value="Join a voice channel and type `/chip [name]` — autocomplete shows your chips as you type.",
                 inline=False,
             )
             embed.add_field(
                 name="Other commands",
-                value="`/soundlist` — see all sounds\n`/rmsound [name]` — delete a sound\n`/info` — full command list",
+                value="`/chiplist` — see all chips\n`/rmchip [name]` — delete a chip\n`/info` — full command list",
                 inline=False,
             )
             await channel.send(embed=embed)
@@ -151,7 +151,7 @@ async def on_voice_state_update(member, before, after):
 # Sound commands
 # ---------------------------------------------------------------------------
 
-async def sound_autocomplete(interaction: discord.Interaction, current: str):
+async def chip_autocomplete(interaction: discord.Interaction, current: str):
     if interaction.guild is None:
         return []
     server_dir = os.path.join(SOUNDS_BASE, str(interaction.guild.id))
@@ -164,9 +164,9 @@ async def sound_autocomplete(interaction: discord.Interaction, current: str):
     ][:25]
 
 
-@client.tree.command(name='sound', description='Play a sound in your voice channel')
-@app_commands.autocomplete(sound_name=sound_autocomplete)
-async def sound(interaction: discord.Interaction, sound_name: str):
+@client.tree.command(name='chip', description='Play a chip in your voice channel')
+@app_commands.autocomplete(sound_name=chip_autocomplete)
+async def chip(interaction: discord.Interaction, sound_name: str):
     path = safe_sound_path(interaction.guild.id, sound_name)
     if path is None or not os.path.isfile(path):
         await interaction.response.send_message("That chip does not exist.", ephemeral=True)
@@ -194,18 +194,18 @@ async def sound(interaction: discord.Interaction, sound_name: str):
     await interaction.followup.send(f"▶ **{sound_name}**")
 
 
-@client.tree.command(name='soundlist', description='List all sounds available in this server')
-async def soundlist(interaction: discord.Interaction):
+@client.tree.command(name='chiplist', description='List all chips available in this server')
+async def chiplist(interaction: discord.Interaction):
     server_dir = os.path.join(SOUNDS_BASE, str(interaction.guild.id))
     if not os.path.isdir(server_dir):
-        await interaction.response.send_message(f"No sounds uploaded yet. Visit {UPLOAD_URL} to add some!")
+        await interaction.response.send_message(f"No chips uploaded yet. Visit {UPLOAD_URL} to add some!")
         return
     names = sorted(f[:-4] for f in os.listdir(server_dir) if f.endswith('.mp3'))
     if not names:
-        await interaction.response.send_message("No sounds found for this server.")
+        await interaction.response.send_message("No chips found for this server.")
         return
 
-    header = "Available Sounds:\n----------------------------\n"
+    header = "Available Chips:\n----------------------------\n"
     body = "  ".join(names)
     msg = f"```{header}{body}```"
     if len(msg) <= 2000:
@@ -227,10 +227,10 @@ async def soundlist(interaction: discord.Interaction):
         await interaction.followup.send(c)
 
 
-@client.tree.command(name='rmsound', description='Remove a sound (requires Manage Server permission)')
+@client.tree.command(name='rmchip', description='Remove a chip (requires Manage Server permission)')
 @app_commands.default_permissions(manage_guild=True)
-@app_commands.autocomplete(sound_name=sound_autocomplete)
-async def rmsound(interaction: discord.Interaction, sound_name: str):
+@app_commands.autocomplete(sound_name=chip_autocomplete)
+async def rmchip(interaction: discord.Interaction, sound_name: str):
     path = safe_sound_path(interaction.guild.id, sound_name)
     if path is None:
         await interaction.response.send_message("Invalid sound name.", ephemeral=True)
@@ -261,9 +261,9 @@ async def info_cmd(interaction: discord.Interaction):
         "```"
         "Hi! I am ChipBot — your custom soundboard for Discord.\n\n"
         "Commands:\n"
-        "  /sound [name]    — Play a sound (with autocomplete)\n"
-        "  /soundlist       — List all sounds for this server\n"
-        "  /rmsound [name]  — Remove a sound (requires Manage Server)\n"
+        "  /chip [name]     — Play a chip (with autocomplete)\n"
+        "  /chiplist        — List all chips for this server\n"
+        "  /rmchip [name]   — Remove a chip (requires Manage Server)\n"
         "  /leave           — Make me leave the voice channel\n"
         "  /joke            — Get a random joke\n"
         "  /crypto [coin]   — Get a coin price + 30-day chart\n"
