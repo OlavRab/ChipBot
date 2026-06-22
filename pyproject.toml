@@ -14,6 +14,7 @@ requests = "^2.31.0"
 python-dotenv = "^1.0.0"
 matplotlib = "^3.8.0"
 Werkzeug = "^3.0.0"
+gunicorn = "^23.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.0.0"

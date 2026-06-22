@@ -151,7 +151,8 @@ def login():
 
 @app.route('/auth/callback')
 def callback():
-    if request.args.get('state') != session.pop('oauth_state', None):
+    session_state = session.pop('oauth_state', None)
+    if not session_state or request.args.get('state') != session_state:
         abort(403)
     code = request.args.get('code')
     if not code:
@@ -165,7 +166,8 @@ def callback():
         'code': code,
         'redirect_uri': DISCORD_REDIRECT_URI,
     }, timeout=10)
-    token_resp.raise_for_status()
+    if not token_resp.ok:
+        abort(400)
     token_data = token_resp.json()
     session['access_token'] = token_data['access_token']
 

@@ -9,6 +9,7 @@ build/
 .venv/
 venv/
 env/
+.pytest_cache
 
 # Bot runtime artifacts
 discord.log
@@ -33,3 +34,6 @@ keys.env
 # IDEs
 .idea/
 .vscode/
+
+# AI
+.claude
