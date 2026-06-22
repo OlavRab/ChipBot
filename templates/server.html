@@ -54,7 +54,8 @@
         </button>
         {% if sounds | length >= limit %}
           <div class="form-text text-danger mt-2">
-            Limit reached ({{ tier | capitalize }} tier: {{ limit }} sounds). Contact the admin to upgrade.
+            Limit reached ({{ tier | capitalize }} tier: {{ limit }} sounds).
+            <a href="/server/{{ server_id }}/upgrade" class="text-danger fw-semibold">Upgrade to add more.</a>
           </div>
         {% endif %}
       </form>

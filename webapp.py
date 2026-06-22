@@ -262,7 +262,7 @@ def upload(server_id: str):
         tier = _db.get_tier(server_id)
         flash(
             f'Sound limit reached ({current_count}/{limit} — {tier.capitalize()} tier). '
-            'Contact the admin to upgrade your server.',
+            'Upgrade your server to add more sounds.',
             'danger',
         )
         return redirect(url_for('server', server_id=server_id))

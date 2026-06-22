@@ -318,7 +318,7 @@ async def crypto(ctx, coin: str):
 # Admin commands
 # ---------------------------------------------------------------------------
 
-@client.command(help='Admin commands: s1 (list servers), tier <id> <tier>')
+@client.command(help='Admin commands: s1 (list servers), tier <id> <tier>, broadcast <msg>')
 async def admin(ctx, subcommand: str, *args):
     if ctx.author.id != ADMIN_ID:
         await ctx.send("You are not authorised to use this command.")
@@ -361,7 +361,7 @@ async def admin(ctx, subcommand: str, *args):
             await ctx.send(str(e))
 
 
-@client.command(help='Show VPS disk usage (admin only)')
+@client.command(help='Show disk usage (admin only)')
 async def storage(ctx):
     if ctx.author.id != ADMIN_ID:
         await ctx.send("You are not authorised to use this command.")
@@ -376,7 +376,4 @@ async def storage(ctx):
     )
 
 
-from keep_alive import keep_alive
-
-keep_alive()
 client.run(os.environ.get('TOKEN'))
